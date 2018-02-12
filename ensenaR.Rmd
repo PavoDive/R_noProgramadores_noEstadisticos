@@ -168,7 +168,7 @@ require(xlsx)
 # Este primer comando le pide a R que "cargue" la librería xlsx, para que sus funciones estén disponibles.
 # a proósito: todo lo que comience con # dentro del código es un comentario y no se ejecuta
 
-produccion <- read.xlsx(file = "archivos/produccionOperario.xlsx", sheetIndex = 1, stringsAsFactors = TRUE, encoding = "UTF-8")
+produccion <- read.xlsx(file = "https://github.com/PavoDive/R_noProgramadores_noEstadisticos/blob/master/archivos/produccionOperario.xlsx", sheetIndex = 1, stringsAsFactors = TRUE, encoding = "UTF-8")
 # que hicimos aquí: leimos un archivo y los datos que estaban en él los cargamos a la variable producción. 
 # Para leerlo usamos la función read.xlsx, leimos el archivo (file) que está en el folder archivos y que se llama produccionOperario.xlsx, indicamos que la tabla que nos interesa está en la hoja 1, e hicimos dos pedidos adicionales:
 # pedimos que las cadenas de texto que encontrara en los datos (strings) las leyera como factores
