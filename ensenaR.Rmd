@@ -164,11 +164,11 @@ install.packages("xlsx")
 Carguemos el archivo, asignándolo en una variable:
 
 ```{r}
-require(xlsx)
+library(xlsx)
 # Este primer comando le pide a R que "cargue" la librería xlsx, para que sus funciones estén disponibles.
 # a proósito: todo lo que comience con # dentro del código es un comentario y no se ejecuta
 
-produccion <- read.xlsx(file = "https://github.com/PavoDive/R_noProgramadores_noEstadisticos/blob/master/archivos/produccionOperario.xlsx", sheetIndex = 1, stringsAsFactors = TRUE, encoding = "UTF-8")
+produccion <- read.xlsx(file = "archivos/produccionOperario.xlsx", sheetIndex = 1, stringsAsFactors = TRUE, encoding = "UTF-8")
 # que hicimos aquí: leimos un archivo y los datos que estaban en él los cargamos a la variable producción. 
 # Para leerlo usamos la función read.xlsx, leimos el archivo (file) que está en el folder archivos y que se llama produccionOperario.xlsx, indicamos que la tabla que nos interesa está en la hoja 1, e hicimos dos pedidos adicionales:
 # pedimos que las cadenas de texto que encontrara en los datos (strings) las leyera como factores
@@ -270,21 +270,21 @@ La grafica ya se torna difícil de interpretar, pero todavía no se ve tendencia
 La tendencia que vimos de unidades por fecha no es conclusiva, porque están separados los turnos. Para poder ver la tendencia es necesario consolidar la producción por fecha (sumarla). Para hacerlo, vamos a utilizar el paquete `data.table`. Este es otro paquete con una sintaxis inicialmente intimidante, pero muy potente. ¡Vamos despacio, pero vamos constante!
 
 ```{r}
-require(data.table)
+library(data.table)
 # cargamos el paquete. ESTA FUE LA ÚLTIMA VEZ QUE EXPLICAMOS ESTO ;)
 
 setDT(produccion)
 # Este comando convierte la tabla produccion en una data.table. Una data.table es como una data.frame, pero en esteroides (en realidad es una clase que conserva la clase data.frame también).
 
-produccion[, sum(unidades), by = fecha]
+produccion[, .(unidadesTotales = sum(unidades)), by = fecha]
 # en este comando estamos usando varias cosas nuevas: el corchete cuadrado [ es el operador clave de las data.table. Dentro de él hay 3 campos principales, separados por comas: el primero es el de filtrar los datos (como está vacío, no estamos filtrando nada). El segundo es el de operar (estamos calculando la suma de la variable unidades). El tercero es el de la variable de agrupación (le estamos diciendo que esa operación la haga por cada fecha)
 ```
 
 Es difícil determinar la tendencia desde una tabla, así que vamos a graficar eso. Hay dos opciones aquí: una es salvar la tabla anterior a una variable temporal, y la otra es pasar esa expresión directamente a `ggplot` como un argumento. Cuál usar dependerá de lo complejas que sean las expresiones, de qué tan enredado esté tu código y de qué tan propenso seas a confundirte. Vamos por ahora a usar la segunda alternativa:
 
 ```{r}
-ggplot(produccion[, sum(unidades), by = fecha], aes(x = fecha, y = V1))+geom_point()
-# una cosa para estar antento son los nombres de las variables. Como no le dimos un nombre a la operación suma, data.table le pone un nombre por defecto, V1. Ese es el nombre que debemos poner en la estética como y
+ggplot(produccion[, .(unidadesTotales = sum(unidades)), by = fecha], aes(x = fecha, y = unidadesTotales))+geom_point()
+# una cosa para estar antento son los nombres de las variables. R es sensible a las mayúsculas y minúsculas. Nuestra variable no se llama "Unidadestotales", ni "unidadestotales". Se llama "unidadesTotales", ese es el nombre que debemos poner en la estética como y
 ```
 
 ¡Wow! Aparentemente hay dos grupos allí... las producciones hasta el 9 de enero (con excepción del día 5) son "bajas", mientras que las del 10 al 14 son más altas.
@@ -293,7 +293,9 @@ Si analizamos, de manera similar, las producciones por turno (recuerden que son 
 
 ```{r}
 ggplot(produccion[, sum(unidades), by = turno], aes(x = turno, y = V1))+geom_point()
-# Una nota intersante aquí: lo que está en el eje x NO ES un número (las fechas se pueden convertir a números), es un factor. R maneja facilmente los factores, entendiéndolos como cateogrías. Lo mismo hará más adelante con los operarios
+# Una nota intersante aquí: lo que está en el eje x NO ES un número (las fechas se pueden convertir a números), es un factor. R maneja facilmente los factores, entendiéndolos como cateogrías. Lo mismo hará más adelante con los operarios.
+
+# También: no asignamos un nombre a la suma, esto es perfectamente legal. Pero data.table necesita mantener con nombre cada variable, así que le asignó uno: "V1". Por lo tanto, debemos llamarla así (o mejor aún: darle nombre cuando la generamos)
 ```
 
 Fíjense que si queremos hacer un cálculo similar para operario, no tiene sentido analizar el _total_ (la suma), sino el promedio (ya que hay diferencia en los turnos trabajados por cada operario). Esto se logra cambiando la operación suma (`sum`) por promedio (`mean`):
